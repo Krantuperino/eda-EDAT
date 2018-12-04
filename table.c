@@ -10,6 +10,7 @@ struct table_ {
 	type_t* types;
 	int first_pos;
 	int last_pos;
+	void * rrecord;
 };
 
 /* 
@@ -95,8 +96,10 @@ void table_close(table_t* table) {
 	 Returns the number of columns of the table 
 */
 int table_ncols(table_t* table) {
-	/* To be implemented */
-	return 0;
+	if(!table)
+		return 0;
+	
+	return table->n_cols;
 }
 
 /* 
@@ -108,16 +111,20 @@ int table_ncols(table_t* table) {
 	 this function returns.
  */
 type_t* table_types(table_t* table) {
-	/* To be implemented */
-	return NULL;
+	if(!table)
+		return NULL;
+	
+	return table->types;
 }
 
 /* 
 	 Returns the position in the file of the first record of the table 
 */
 long table_first_pos(table_t* table) {
-	/* To be implemented */
-	return 0L;
+	if(!table)
+		return 0L;
+	
+	return table->first_pos;
 }
 
 /* 
@@ -125,8 +132,10 @@ long table_first_pos(table_t* table) {
 	 positioned. 
 */
 long table_cur_pos(table_t* table) {
-	/* To be implemented */
-	return 0L;
+	if(!table)
+		return 0L;
+	
+	return fseek(table->f, 0, SEEK_CUR);
 }
 
 /* 
@@ -134,8 +143,10 @@ long table_cur_pos(table_t* table) {
 	 new record should be inserted.
 */
 long table_last_pos(table_t* table) {
-	/* To be implemented */
-	return 0L;
+	if(!table)
+		return 0L;
+	
+	return table->last_pos;
 }
 
 /* 
@@ -145,8 +156,10 @@ long table_last_pos(table_t* table) {
 	 if the position requested is past the end of the file.
 */
 long table_read_record(table_t* table, long pos) {
-	/* To be implemented */
-	return -1L;
+	if(pos>table->last_pos || !table)
+		return -1L;
+	
+
 }
 
 /*
