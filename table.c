@@ -10,7 +10,7 @@ struct table_ {
 	type_t* types;
 	int first_pos;
 	int last_pos;
-	void * rrecord;
+	void ** record;
 };
 
 /* 
@@ -97,7 +97,7 @@ void table_close(table_t* table) {
 */
 int table_ncols(table_t* table) {
 	if(!table)
-		return 0;
+		return -1;
 	
 	return table->n_cols;
 }
@@ -122,7 +122,7 @@ type_t* table_types(table_t* table) {
 */
 long table_first_pos(table_t* table) {
 	if(!table)
-		return 0L;
+		return -1L;
 	
 	return table->first_pos;
 }
@@ -133,9 +133,10 @@ long table_first_pos(table_t* table) {
 */
 long table_cur_pos(table_t* table) {
 	if(!table)
-		return 0L;
+		return -1L;
 	
-	return fseek(table->f, 0, SEEK_CUR);
+	fseek(table->f, 0, SEEK_CUR);
+	return ftell(table->f);
 }
 
 /* 
@@ -144,7 +145,7 @@ long table_cur_pos(table_t* table) {
 */
 long table_last_pos(table_t* table) {
 	if(!table)
-		return 0L;
+		return -1L;
 	
 	return table->last_pos;
 }
@@ -156,10 +157,25 @@ long table_last_pos(table_t* table) {
 	 if the position requested is past the end of the file.
 */
 long table_read_record(table_t* table, long pos) {
+	int i;
+
 	if(pos>table->last_pos || !table)
 		return -1L;
 	
+	if(fseek(table->f, pos, SEEK_SET) != 0)
+		return -1L;
+	
+	if(!table->record){
+		table->record = (void**)malloc(sizeof(void*) * table->n_cols);
+		for(i=0; i<n_cols; i++){
+			table->record[i] = (void *)malloc(sizeof(table->types[i]));
+		}
+	}
+	for(i = table->n_cols; i>0; i--){
+		fread(table->record[i], sizeof(type_t), 1, table->f);
+	}
 
+	return table_cur_pos(table);
 }
 
 /*
@@ -170,10 +186,11 @@ long table_read_record(table_t* table, long pos) {
 	column doesn't exist.
 */
 void *table_column_get(table_t* table, int col) {
-	/* To be implemented */
-	return NULL;
+	if(!table || col >= table->n_cols || !table->record)
+		return NULL;
+	
+	return table->record[col];
 }
-
 
 /* 
 	 Inserts a record in the last available position of the table. Note
@@ -182,7 +199,16 @@ void *table_column_get(table_t* table, int col) {
 	 to store... why?
 	*/
 void table_insert_record(table_t* table, void** values) {
-	/* To be implemented */
+	int i;
+
+	if(!table)
+		return;
+
+	fseek(table->f, table->last_pos,SEEK_SET);
+	for(i=0; i < table->n_cols; i++){
+		fwrite(values[i], sizeof(table->types[i]), 1, table->f);
+	}
+	table->last_pos = ftell(table->f);
 	return;
 }
 
