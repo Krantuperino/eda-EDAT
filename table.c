@@ -24,7 +24,7 @@ void table_create(char* path, int ncols, type_t* types) {
 	if(!path || ncols < 1 || !types)
 		return;
 	
-	bin = fopen(path, "wb");
+	bin = fopen(path, "w");
 
 	if(!bin)
 		return;
@@ -43,7 +43,6 @@ void table_create(char* path, int ncols, type_t* types) {
 table_t* table_open(char* path) {
 	
 	table_t * table;
-	int i;
 
 	if(!path)
 		return NULL;
@@ -52,7 +51,7 @@ table_t* table_open(char* path) {
 	if(!table)
 		return NULL;
 	
-	table->f = fopen(path, "rb");
+	table->f = fopen(path, "r+");
 	if(!table->f)
 		goto err0;
 	
@@ -157,7 +156,8 @@ long table_last_pos(table_t* table) {
 	 if the position requested is past the end of the file.
 */
 long table_read_record(table_t* table, long pos) {
-	int i;
+	int i, offset, lenght;
+	void * buff = NULL;
 
 	if(pos>table->last_pos || !table)
 		return -1L;
@@ -165,14 +165,18 @@ long table_read_record(table_t* table, long pos) {
 	if(fseek(table->f, pos, SEEK_SET) != 0)
 		return -1L;
 	
-	if(!table->record){
-		table->record = (void**)malloc(sizeof(void*) * table->n_cols);
-		for(i=0; i<n_cols; i++){
-			table->record[i] = (void *)malloc(sizeof(table->types[i]));
+	fread(&lenght, sizeof(int), 1, table->f);
+	fread(buff, sizeof(char), lenght, table->f);
+
+	for(i=0, offset=0; i<table->n_cols; i++){
+		if(table->types[i] == INT){
+			memcpy(table->record[i], buff+offset, sizeof(int));
+			offset+=sizeof(int);
 		}
-	}
-	for(i = table->n_cols; i>0; i--){
-		fread(table->record[i], sizeof(type_t), 1, table->f);
+		else{
+			memccpy(table->record[i], buff+offset, '\0', 1024);
+			offset+=strlen((char *)table->record[i]);
+		}
 	}
 
 	return table_cur_pos(table);
@@ -199,14 +203,31 @@ void *table_column_get(table_t* table, int col) {
 	 to store... why?
 	*/
 void table_insert_record(table_t* table, void** values) {
-	int i;
+	int i, len;
 
 	if(!table)
 		return;
 
 	fseek(table->f, table->last_pos,SEEK_SET);
+	for(i=0, len=0; i < table->n_cols; i++){
+		if(table->types[i]== INT){
+			len+=sizeof(int);
+		}
+		else{
+			len+=strlen((char*)table);
+		}
+	}
+	fwrite(&len, sizeof(int), 1, table->f);
 	for(i=0; i < table->n_cols; i++){
-		fwrite(values[i], sizeof(table->types[i]), 1, table->f);
+		switch(table->types[i]){
+			case INT:
+				fwrite(values[i], sizeof(int), 1, table->f);
+				break;
+			default:
+				len = strlen((char *)values[i]);
+				fwrite(values[i], len, 1, table->f);
+				break;
+		}
 	}
 	table->last_pos = ftell(table->f);
 	return;

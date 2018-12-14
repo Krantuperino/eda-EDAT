@@ -4,11 +4,11 @@
 
 #include "table.h"
 
-#define NCOLS 4
+#define NCOLS 2
 
 int main () {
     table_t *tb = NULL;
-    type_t t[NCOLS] = {INT, STR, LLNG, DBL};
+    type_t t[NCOLS] = {INT, STR};
     long pos;
     int i, r=0;
     void **buff=NULL;
