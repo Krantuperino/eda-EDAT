@@ -8,9 +8,10 @@
 
 typedef enum {
     INT, /*integer*/
-    STR /*string*/
+    STR, /*string*/
+    LLNG,
+    DBL
 } type_t;
-
 
 /* 
    value_cmp(type_t type, void* value1, void* value2);

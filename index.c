@@ -3,12 +3,12 @@
 #include <string.h>
 #include "index.h"
 
+typedef struct {
+} irecord;
+
 struct index_ {
     /* to be implemented */
 };
-
-typedef struct {
-} irecord;
 
 int mycmp(const void *kptr, const void *e) {
   /*

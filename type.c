@@ -10,6 +10,10 @@ value_length(type_t type, void* value) {
             return sizeof(int);
         case STR:
             return (strlen((char*) value) + 1) * sizeof(char);
+        case LLNG:
+            return sizeof(long long int);
+        case DBL:
+            return sizeof(double);
         default:
             return 0;
     }
@@ -24,6 +28,11 @@ print_value(FILE* f, type_t type, void* value) {
         case STR:
             fprintf(f, "%s", (char*) value);
             break;
+        case LLNG:
+            fprintf(f, "%6lld", *((long long int*) value));
+            break;
+        case DBL:
+            fprintf(f, "%6lf", *((double *) value));
     }
 }
 

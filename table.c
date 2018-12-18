@@ -182,15 +182,30 @@ long table_read_record(table_t* table, long pos) {
 	fread(buff, sizeof(char), lenght, table->f);
 
 	for(i=0, offset=0; i<table->n_cols; i++){
-		if(table->types[i] == INT){
+		switch(table->types[i]){
+		case INT:
 			table->record[i] = malloc(sizeof(int));
 			memcpy(table->record[i], buff+offset, sizeof(int));
 			offset+=sizeof(int);
-		}
-		else{
+			break;
+		
+		case LLNG:
+			table->record[i] = malloc(sizeof(long long int));
+			memcpy(table->record[i], buff+offset, sizeof(long long int));
+			offset+=sizeof(long long int);
+			break;
+
+		case DBL:
+			table->record[i] = malloc(sizeof(double));
+			memcpy(table->record[i], buff+offset, sizeof(double));
+			offset+=sizeof(double);
+			break;
+
+		default:
 			table->record[i] = malloc(1024);
 			memccpy(table->record[i], buff+offset, '\0', 1024);
 			offset+=strlen((char *)table->record[i])-1;
+			break;
 		}
 	}
 
@@ -225,11 +240,20 @@ void table_insert_record(table_t* table, void** values) {
 
 	fseek(table->f, table->last_pos,SEEK_SET);
 	for(i=0, len=0; i < table->n_cols; i++){
-		if(table->types[i]== INT){
+		switch(table->types[i]){
+		
+		case INT:
 			len+=sizeof(int);
-		}
-		else{
+			break;
+		case LLNG:
+			len+=sizeof(long long int);
+			break;
+		case DBL:
+			len+=sizeof(double);
+			break;
+		default:
 			len+=strlen((char*)values[i]);
+			break;
 		}
 	}
 	fwrite(&len, sizeof(int), 1, table->f);
@@ -238,6 +262,15 @@ void table_insert_record(table_t* table, void** values) {
 			case INT:
 				fwrite(values[i], sizeof(int), 1, table->f);
 				break;
+			
+			case LLNG:
+				fwrite(values[i], sizeof(long long int), 1, table->f);
+				break;
+			
+			case DBL:
+				fwrite(values[i], sizeof(double), 1, table->f);
+				break;
+			
 			default:
 				len = strlen((char *)values[i]);
 				fwrite(values[i], len, 1, table->f);

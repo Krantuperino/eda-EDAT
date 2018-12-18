@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -pedantic -Wall -ggdb
-EXE = table_test test_table
+EXE = test_table
 
 all : $(EXE) 
 .PHONY : clean
@@ -14,8 +14,8 @@ $(EXE) : % : %.o table.o type.o
 
 table.o : table.c table.h
 	@echo "# Generating $@"
-	$(CC) $(CFLAGS) -c $^
+	$(CC) $(CFLAGS) -c $<
 
 type.o : type.c type.h
 	@echo "# Generating $@"
-	$(CC) $(CFLAGS) -c $^
+	$(CC) $(CFLAGS) -c $<

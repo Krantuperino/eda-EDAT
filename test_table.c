@@ -5,7 +5,7 @@
 
 int main(void) {
   int ncols = 3;
-  type_t types[] = {INT, STR, INT};
+  type_t types[] = {LLNG, STR, DBL};
   printf("Trying to create a table with %d columns...\n", ncols);
 
   table_create(STORAGE, ncols, types);
@@ -71,7 +71,7 @@ int main(void) {
   printf("Trying to insert a record into the table...\n");
 
   // create dummy data
-  int a = 1, c = 3;
+  int a = 1, c = 6;
   char *b = "Marabini for president! Yes we can, guys!";
   void *record[] = {&a, b, &c};
   printf(" -> Inserting values (%d, \"%s\", %d)\n", a, b, c);
