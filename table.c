@@ -51,7 +51,7 @@ table_t* table_open(char* path) {
 	if(!table)
 		return NULL;
 	
-	table->f = fopen(path, "r+");
+	table->f = fopen(path, "rb+");
 	if(!table->f)
 		goto err0;
 	
@@ -59,9 +59,13 @@ table_t* table_open(char* path) {
 	if(table->n_cols < 1)
 		goto err1;
 	
+	table->record = malloc(sizeof(void*)*table->n_cols);
+	if(!table->record)
+		goto err1;
+	
 	table->types = (type_t*) malloc(sizeof(type_t)*table->n_cols);
 	if(!table->types)
-		goto err1;
+		goto err2;
 
 	fread(table->types, sizeof(type_t), table->n_cols, table->f);
 	table->first_pos = ftell(table->f);
@@ -70,6 +74,8 @@ table_t* table_open(char* path) {
 
 	return table;
 
+	err2:
+	free(table->record);
 	err1:
 	fclose(table->f);
 	err0:
@@ -83,9 +89,15 @@ table_t* table_open(char* path) {
 */
 void table_close(table_t* table) {
 	
+	int i;
+
 	if(!table)
 		return;
 	fclose(table->f);
+	for(i=0; table->types[i]; i++){
+		free(table->record[i]);
+	}
+	free(table->record);
 	free(table->types);
 	free(table);
 	return;
@@ -166,16 +178,19 @@ long table_read_record(table_t* table, long pos) {
 		return -1L;
 	
 	fread(&lenght, sizeof(int), 1, table->f);
+	buff=malloc(lenght);
 	fread(buff, sizeof(char), lenght, table->f);
 
 	for(i=0, offset=0; i<table->n_cols; i++){
 		if(table->types[i] == INT){
+			table->record[i] = malloc(sizeof(int));
 			memcpy(table->record[i], buff+offset, sizeof(int));
 			offset+=sizeof(int);
 		}
 		else{
+			table->record[i] = malloc(1024);
 			memccpy(table->record[i], buff+offset, '\0', 1024);
-			offset+=strlen((char *)table->record[i]);
+			offset+=strlen((char *)table->record[i])-1;
 		}
 	}
 
@@ -214,7 +229,7 @@ void table_insert_record(table_t* table, void** values) {
 			len+=sizeof(int);
 		}
 		else{
-			len+=strlen((char*)table);
+			len+=strlen((char*)values[i]);
 		}
 	}
 	fwrite(&len, sizeof(int), 1, table->f);
