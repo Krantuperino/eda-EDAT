@@ -168,44 +168,52 @@ long table_last_pos(table_t* table) {
 	 if the position requested is past the end of the file.
 */
 long table_read_record(table_t* table, long pos) {
-	int i, offset = 0, lenght = 0;
-	void * buff = NULL;
+	int i, offset = 0, lenght = 0, j;
+	unsigned char * buff = NULL;
 
-	if(pos>table->last_pos || !table)
+	if(pos > table->last_pos || !table)
 		return -1L;
 	
 	if(fseek(table->f, pos, SEEK_SET) != 0)
 		return -1L;
 	
 	fread(&lenght, sizeof(int), 1, table->f);
-	buff=malloc(lenght);
+	
+	buff = (unsigned char *) calloc(lenght, sizeof(unsigned char));
 	fread(buff, sizeof(char), lenght, table->f);
 
-	for(i=0, offset=0; i<table->n_cols; i++){
+	for (j = 0; j < lenght; j++)
+		printf("[%d %x]\n", j, buff[j]);
+
+	for(i=0; i<table->n_cols; i++){
 		switch(table->types[i]){
 		case INT:
-			table->record[i] = malloc(sizeof(int));
-			memcpy(table->record[i], buff+offset, sizeof(int));
+			printf("READING [%d]\n", offset);
+			table->record[i] = calloc(1, sizeof(int));
+			memcpy(table->record[i], (void *) (buff + offset), sizeof(int));
 			offset+=sizeof(int);
 			break;
 		
 		case LLNG:
-			table->record[i] = malloc(sizeof(long long int));
-			memcpy(table->record[i], buff+offset, sizeof(long long int));
+			printf("READING [%d]\n", offset);
+			table->record[i] = calloc(1, sizeof(long long int));
+			memcpy(table->record[i], (void *) (buff + offset), sizeof(long long int));
 			offset+=sizeof(long long int);
 			break;
 
 		case DBL:
-			table->record[i] = malloc(sizeof(double));
-			memcpy(table->record[i], buff+offset, sizeof(double));
+			printf("READING [%d]\n", offset);
+			table->record[i] = calloc(1, sizeof(double));
+			memcpy(table->record[i], (void *) (buff + offset), sizeof(double));
 			offset+=sizeof(double);
 			break;
 
 		default:
-			table->record[i] = malloc(1024);
-			memccpy(table->record[i], buff+offset, '\0', 1024);
-			
-			offset+=strlen((char *)table->record[i])-1;
+			printf("READING [%d]\n", offset);
+			table->record[i] = calloc(1, 1024);
+			memccpy(table->record[i], (void *) (buff + offset), '\0', 1024);
+			offset += strlen(table->record[i]) + 1;
+			printf("[%ld]\n", strlen(table->record[i]) + 1);
 			break;
 		}
 	}
@@ -232,10 +240,9 @@ void *table_column_get(table_t* table, int col) {
 	 that all the values are cast to void *, and that there is no
 	 indication of their actual type or even of how many values we ask
 	 to store... why?
-	*/
+*/
 void table_insert_record(table_t* table, void** values) {
-	int i, len;
-	char *string_with_zero = NULL;
+	int i, len = 0;
 
 	if(!table)
 		return;
@@ -245,21 +252,21 @@ void table_insert_record(table_t* table, void** values) {
 		switch(table->types[i]){
 		
 		case INT:
-			len+=sizeof(int);
+			len += sizeof(int);
 			break;
 		case LLNG:
-			len+=sizeof(long long int);
+			len += sizeof(long long int);
 			break;
 		case DBL:
-			len+=sizeof(double);
+			len += sizeof(double);
 			break;
 		default:
-			/* Plus one at the end because we end strings with \0 */
-			len+=strlen((char*)values[i]) + 1;
+			len += strlen((char*) values[i]) + 1;
 			break;
 		}
 	}
 	fwrite(&len, sizeof(int), 1, table->f);
+
 	for(i=0; i < table->n_cols; i++){
 		switch(table->types[i]){
 			case INT:
@@ -275,11 +282,8 @@ void table_insert_record(table_t* table, void** values) {
 				break;
 			
 			default:
-				len = strlen((char *)values[i]) + 1;
-				string_with_zero = (char *) calloc(len + 1, sizeof(char));
-				strcat(string_with_zero, values);
-				strcat(string_with_zero, '\0');
-				fwrite(string_with_zero, len, 1, table->f);
+				len = strlen((char *)values[i]);
+				fwrite(values[i], len+1, 1, table->f);
 				break;
 		}
 	}
