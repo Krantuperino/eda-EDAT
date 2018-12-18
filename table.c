@@ -168,7 +168,7 @@ long table_last_pos(table_t* table) {
 	 if the position requested is past the end of the file.
 */
 long table_read_record(table_t* table, long pos) {
-	int i, offset, lenght;
+	int i, offset = 0, lenght = 0;
 	void * buff = NULL;
 
 	if(pos>table->last_pos || !table)
@@ -204,6 +204,7 @@ long table_read_record(table_t* table, long pos) {
 		default:
 			table->record[i] = malloc(1024);
 			memccpy(table->record[i], buff+offset, '\0', 1024);
+			
 			offset+=strlen((char *)table->record[i])-1;
 			break;
 		}
@@ -234,6 +235,7 @@ void *table_column_get(table_t* table, int col) {
 	*/
 void table_insert_record(table_t* table, void** values) {
 	int i, len;
+	char *string_with_zero = NULL;
 
 	if(!table)
 		return;
@@ -252,7 +254,8 @@ void table_insert_record(table_t* table, void** values) {
 			len+=sizeof(double);
 			break;
 		default:
-			len+=strlen((char*)values[i]);
+			/* Plus one at the end because we end strings with \0 */
+			len+=strlen((char*)values[i]) + 1;
 			break;
 		}
 	}
@@ -272,8 +275,11 @@ void table_insert_record(table_t* table, void** values) {
 				break;
 			
 			default:
-				len = strlen((char *)values[i]);
-				fwrite(values[i], len, 1, table->f);
+				len = strlen((char *)values[i]) + 1;
+				string_with_zero = (char *) calloc(len + 1, sizeof(char));
+				strcat(string_with_zero, values);
+				strcat(string_with_zero, '\0');
+				fwrite(string_with_zero, len, 1, table->f);
 				break;
 		}
 	}
