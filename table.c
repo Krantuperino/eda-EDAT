@@ -182,38 +182,30 @@ long table_read_record(table_t* table, long pos) {
 	buff = (unsigned char *) calloc(lenght, sizeof(unsigned char));
 	fread(buff, sizeof(char), lenght, table->f);
 
-	for (j = 0; j < lenght; j++)
-		printf("[%d %x]\n", j, buff[j]);
-
 	for(i=0; i<table->n_cols; i++){
 		switch(table->types[i]){
 		case INT:
-			printf("READING [%d]\n", offset);
 			table->record[i] = calloc(1, sizeof(int));
 			memcpy(table->record[i], (void *) (buff + offset), sizeof(int));
 			offset+=sizeof(int);
 			break;
 		
 		case LLNG:
-			printf("READING [%d]\n", offset);
 			table->record[i] = calloc(1, sizeof(long long int));
 			memcpy(table->record[i], (void *) (buff + offset), sizeof(long long int));
 			offset+=sizeof(long long int);
 			break;
 
 		case DBL:
-			printf("READING [%d]\n", offset);
 			table->record[i] = calloc(1, sizeof(double));
 			memcpy(table->record[i], (void *) (buff + offset), sizeof(double));
 			offset+=sizeof(double);
 			break;
 
 		default:
-			printf("READING [%d]\n", offset);
 			table->record[i] = calloc(1, 1024);
 			memccpy(table->record[i], (void *) (buff + offset), '\0', 1024);
 			offset += strlen(table->record[i]) + 1;
-			printf("[%ld]\n", strlen(table->record[i]) + 1);
 			break;
 		}
 	}
