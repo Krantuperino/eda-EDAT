@@ -1,16 +1,21 @@
 CC = gcc
 CFLAGS = -pedantic -Wall -ggdb
-EXE = test_table
+CLIBS = -lodbc
+EXE = test_table score
 
-all : $(EXE) 
+all : $(EXE)
 .PHONY : clean
 
-clean : 
-	rm -rf *.o $(EXE)
+clean :
+	rm -rf *.o dummy_table.dat score.dat $(EXE)
 
-$(EXE) : % : %.o table.o type.o
+$(EXE) : % : %.o table.o type.o odbc.o
 	@echo "# Compiling $@"
-	$(CC) $(CFLAGS) -o $@ $< table.o type.o
+	$(CC) $(CFLAGS) -o $@ $< table.o type.o odbc.o $(CLIBS)
+
+odbc.o : odbc.c odbc.h
+	@echo "# Generating $@"
+	$(CC) $(CFLAGS) -c $< $(CLIBS)
 
 table.o : table.c table.h
 	@echo "# Generating $@"
