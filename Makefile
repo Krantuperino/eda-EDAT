@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -pedantic -Wall -ggdb
 CLIBS = -lodbc
-EXE = test_table score
+EXE = test_table score suggest
 
 all : $(EXE)
 .PHONY : clean
