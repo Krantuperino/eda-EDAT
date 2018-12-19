@@ -19,6 +19,7 @@ int main(int argc, char const *argv[]) {
   if(argc < 4){
     printf("Wrong parameters, correct use is:\n");
     printf("\t%s <scrname> <score> \"<comment>\"\n", argv[0]);
+    return -1;
   }
   else{
     strcpy(scrname, argv[1]);
@@ -66,12 +67,18 @@ int main(int argc, char const *argv[]) {
   if(!values)
     return -1;
   values[0] = (void*)&num;
-  values[1] = (void*)&scrname;
+  values[1] = malloc(strlen(scrname));
+  memcpy(values[1], scrname, strlen(scrname));
   values[2] = (void*)&score;
-  values[3] = (void*)&comment;
+  values[3] = malloc(strlen(comment));
+  memcpy(values[3], comment, strlen(comment));
+  
 
   table_insert_record(table, values);
   table_close(table);
+  free(values[1]);
+  free(values[3]);
+  free(values);
 
   return 0;
 }

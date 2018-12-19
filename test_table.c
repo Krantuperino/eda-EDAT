@@ -4,8 +4,8 @@
 #define STORAGE "dummy_table.dat"
 
 int main(void) {
-  int ncols = 4;
-  type_t types[] = {LLNG, STR, DBL, INT};
+  int ncols = 5;
+  type_t types[] = {LLNG, STR, STR, DBL, INT};
   printf("Trying to create a table with %d columns...\n", ncols);
 
   table_create(STORAGE, ncols, types);
@@ -73,11 +73,12 @@ int main(void) {
   // create dummy data
   long long a = 100;
   char *b = "Marabini for president! Yes we can, guys!";
-  double c = 7.4;
-  int d = 6;
+  char *c = "Testing second string!!";
+  double d = 7.4;
+  int e = 6;
 
-  void *record[] = {&a, b, &c, &d};
-  printf(" -> Inserting values (%lld, \"%s\", %lf, %d)\n", a, b, c, d);
+  void *record[] = {&a, b, c, &d, &e};
+  printf(" -> Inserting values (%lld, \"%s\", \"%s\", %lf, %d)\n", a, b, c, d, e);
 
   table_insert_record(table, record);
 
@@ -98,11 +99,12 @@ int main(void) {
   printf("Trying to retrieve the record we just saved from the database...\n");
   table_read_record(table, table_first_pos(table));
 
-  printf(" -> Retrieved values (%lld, \"%s\", %lf, %d)\n",
+  printf(" -> Retrieved values (%lld, \"%s\", \"%s\", %lf, %d)\n",
     *(long long int *)table_column_get(table, 0),
     (char *)table_column_get(table, 1),
-    *(double *)table_column_get(table, 2),
-    *(int *)table_column_get(table, 3));
+    (char *)table_column_get(table, 2),
+    *(double *)table_column_get(table, 3),
+    *(int *)table_column_get(table, 4));
 
   table_close(table);
 
