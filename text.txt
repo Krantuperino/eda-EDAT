@@ -1,1 +1,0 @@
-https://github.com/lucicolpe/EDAT/blob/master/Practica%203/Práctica3final/development/database/table.c

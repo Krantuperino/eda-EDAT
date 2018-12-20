@@ -89,14 +89,9 @@ table_t* table_open(char* path) {
 */
 void table_close(table_t* table) {
 
-	int i;
-
 	if(!table)
 		return;
 	fclose(table->f);
-	for(i=0; table->types[i]; i++){
-		free(table->record[i]);
-	}
 	free(table->record);
 	free(table->types);
 	free(table);
@@ -236,7 +231,7 @@ void *table_column_get(table_t* table, int col) {
 void table_insert_record(table_t* table, void** values) {
 	int i, len = 0;
 
-	if(!table)
+	if(!table || !values)
 		return;
 
 	fseek(table->f, table->last_pos,SEEK_SET);
@@ -253,7 +248,7 @@ void table_insert_record(table_t* table, void** values) {
 			len += sizeof(double);
 			break;
 		default:
-			len += strlen((char*) values[i]) + 1;
+			len += strlen((char*) values[i]) +1;
 			break;
 		}
 	}

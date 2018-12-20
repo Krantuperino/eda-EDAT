@@ -1,26 +1,34 @@
-CC = gcc
-CFLAGS = -pedantic -Wall -ggdb
-CLIBS = -lodbc
-EXE = test_table score suggest
+CC = gcc -pedantic
+CFLAGS = -Wall -Wextra -g
+LDLIBS = -lodbc
+EXE = test_table score suggest suggestive
 
 all : $(EXE)
-.PHONY : clean
 
 clean :
-	rm -rf *.o dummy_table.dat score.dat $(EXE)
+	rm -f *.o *.txt *.dat core $(EXE)
 
-$(EXE) : % : %.o table.o type.o odbc.o
-	@echo "# Compiling $@"
-	$(CC) $(CFLAGS) -o $@ $< table.o type.o odbc.o $(CLIBS)
-
-odbc.o : odbc.c odbc.h
-	@echo "# Generating $@"
-	$(CC) $(CFLAGS) -c $< $(CLIBS)
-
-table.o : table.c table.h
-	@echo "# Generating $@"
-	$(CC) $(CFLAGS) -c $<
+$(EXE) : % : %.o type.o table.o index.o odbc.o
+	$(CC) $(CFLAGS) -o $@ $@.o type.o table.o index.o odbc.o $(LDLIBS)
 
 type.o : type.c type.h
-	@echo "# Generating $@"
 	$(CC) $(CFLAGS) -c $<
+
+table.o : table.c table.h
+	$(CC) $(CFLAGS) -c $<
+
+index.o : index.c index.h
+	$(CC) $(CFLAGS) -c $<
+
+odbc.o : odbc.c odbc.h
+	$(CC) $(CFLAGS) -c $< $(LDLIBS)
+
+runvtable:
+	valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes ./test 20
+
+	valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes ./test_table
+
+	valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes ./table_test
+
+runvscore:
+	valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes ./score Buenafuente 50 \"es un senior mayor\"

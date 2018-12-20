@@ -1,11 +1,13 @@
 #include "odbc.h"
 #include "table.h"
 
+int score, i;
 
 int main(int argc, char const *argv[]) {
 
+
+
   char scrname[100], comment[1024];
-  int score, i;
   SQLHENV env;
   SQLHDBC dbc;
   SQLHSTMT stmt;
@@ -14,7 +16,7 @@ int main(int argc, char const *argv[]) {
   long int num;
   table_t *table;
   type_t types[4] = {LLNG, STR, INT, STR};
-  void ** values;
+  void * values[4];
 
   if(argc < 4){
     printf("Wrong parameters, correct use is:\n");
@@ -29,10 +31,11 @@ int main(int argc, char const *argv[]) {
       return -1;
     }
     strcpy(comment, "");
-    for(i=3; i<argc; i++){
+    for(i=3; i<argc-1; i++){
           strcat(comment, argv[i]);
           strcat(comment, " ");
         }
+        strcat(comment, argv[i]);
   }
 
   /* CONNECT */
@@ -63,22 +66,17 @@ int main(int argc, char const *argv[]) {
     table = table_open("score.dat");
   }
 
-  values = malloc(sizeof(void*) * 4);
-  if(!values)
-    return -1;
   values[0] = (void*)&num;
-  values[1] = malloc(strlen(scrname));
+  values[1] = calloc(1, strlen(scrname));
   memcpy(values[1], scrname, strlen(scrname));
   values[2] = (void*)&score;
-  values[3] = malloc(strlen(comment));
+  values[3] = calloc(1, strlen(comment)+1);
   memcpy(values[3], comment, strlen(comment));
-  
 
   table_insert_record(table, values);
   table_close(table);
   free(values[1]);
   free(values[3]);
-  free(values);
 
   return 0;
 }
